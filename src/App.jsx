@@ -1,22 +1,28 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
-import sortPlacesByDistance from './loc.js'  
+import {sortPlacesByDistance} from './loc.js';
 
 
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [availablePlaces, setAvailablePlaces] = useState([])
 
-  // navigator is provide by browser, this function called side effect, because this function is not directly related with rendered contents
-  navigator.geolocation.getCurrentPosition((position)=>{
+  useEffect(()=>{
+    // navigator is provide by browser, this function called side effect, because this function is not directly related with rendered sections
+    navigator.geolocation.getCurrentPosition((position)=>{
     const sortedPlaces = sortPlacesByDistance(AVAILABLE_PLACES, position.coords.latitude, position.coords.longitude)
-  })
+
+    setAvailablePlaces(sortedPlaces)
+    // as we know when state changes react will execute again function app, that cause the infinite loop. So we need useEffect
+    })
+  }, [])
 
   function handleStartRemovePlace(id) {
     modal.current.open();
@@ -70,7 +76,8 @@ function App() {
         />
         <Places
           title="Available Places"
-          places={AVAILABLE_PLACES}
+          places={availablePlaces}
+          fallbackText="Sorting places by distance..."
           onSelectPlace={handleSelectPlace}
         />
       </main>
